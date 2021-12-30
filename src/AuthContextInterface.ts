@@ -4,6 +4,11 @@ export interface Location {
   hash: string;
 }
 
+export interface ErrorState {
+  status: boolean,
+  message?: string,
+}
+
 export interface AuthProviderSignOutProps {
   /**
    * Trigger a redirect of the current window to the end session endpoint
@@ -145,4 +150,8 @@ export interface AuthContextProps {
    * Auth state: True until the library has been initialized.
    */
   isLoading: boolean;
+  /**
+   * Set error
+   */
+  isError: ErrorState;
 }

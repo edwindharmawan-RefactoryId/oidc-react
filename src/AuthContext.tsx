@@ -80,8 +80,12 @@ export const AuthProvider: FC<AuthProviderProps> = ({
   ...props
 }) => {
   const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState({
+    status: false,
+    message: "",
+  })
   const [userData, setUserData] = useState<User | null>(null);
-  const [userManager] = useState<UserManager>(() => initUserManager(props)); 
+  const [userManager] = useState<UserManager>(initUserManager(props));
 
   const signOutHooks = async (): Promise<void> => {
     setUserData(null);
@@ -107,11 +111,18 @@ export const AuthProvider: FC<AuthProviderProps> = ({
        * Check if the user is returning back from OIDC.
        */
       if (hasCodeInUrl(location)) {
-        const user = await userManager.signinCallback();
-        setUserData(user);
-        setIsLoading(false);
-        onSignIn && onSignIn(user);
-        return;
+        try {
+          const user = await userManager.signinCallback();
+          setUserData(user);
+          setIsLoading(false);
+          onSignIn && onSignIn(user);
+          return;
+        } catch (error) {
+          setIsError({
+            status: true,
+            message: typeof error === 'string' ? error : "Error coming from oidc react",
+          })
+        }
       }
 
       const user = await userManager!.getUser();
@@ -133,7 +144,6 @@ export const AuthProvider: FC<AuthProviderProps> = ({
       const user = await userManager.getUser();
       isMountedRef.current && setUserData(user);
     };
-
     userManager.events.addUserLoaded(updateUserData);
 
     return () => userManager.events.removeUserLoaded(updateUserData);
@@ -159,6 +169,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({
         userManager,
         userData,
         isLoading,
+        isError,
       }}
     >
       {children}
